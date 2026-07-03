@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Ultimate TIC TAC</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{font-family:'Poppins',Arial;text-align:center;overflow:hidden;background:#f5f5f7;transition:background 0.3s}
+body.turnX{background:#e3f2fd}
+body.turnO{background:#ffebee}
+.screen{position:fixed;top:0;left:0;width:100%;height:100%;background:transparent;display:none;flex-direction:column;justify-content:center;align-items:center;z-index:100;padding:20px}
+.screen.active{display:flex}
+#menuTitle{font-size:44px;font-weight:800;margin-bottom:8px;color:#1d1d1f}
+#menuTitle span{color:#007aff}
+#menuSub{font-size:15px;color:#6e6e73;margin-bottom:20px;font-weight:600}
+.menuBtn{padding:16px 48px;margin:8px;font:700 20px 'Poppins';border:none;border-radius:18px;box-shadow:0 6px 20px rgba(0,0,0,0.15);background:#007aff;color:white;min-width:260px;cursor:pointer}
+.menuBtn:active{transform:scale(0.95);background:#0051d5}
+.menuBtn.lb{background:#ff9500}
+.menuBtn.ai{background:#34c759}
+.menuBtn.ad{background:#ff3b30}
+.menuBtn.online{background:#34c759}
+#diffTitle{font-size:30px;font-weight:800;margin-bottom:25px}
+.diffBtn{padding:15px 48px;margin:8px;font:700 19px 'Poppins';border:none;border-radius:16px;box-shadow:0 5px 18px rgba(0,0,0,0.12);background:white;color:#1d1d1f;min-width:240px;cursor:pointer}
+.diffBtn:active{transform:scale(0.95)}
+.diffBtn.easy{border:3px solid #34c759;color:#34c759}
+.diffBtn.medium{border:3px solid #ff9500;color:#ff9500}
+.diffBtn.hard{border:3px solid #ff3b30;color:#ff3b30}
+#lbTitle{font-size:30px;font-weight:800;margin:15px 0}
+#lbList{width:100%;max-width:400px;background:white;border-radius:16px;padding:18px;box-shadow:0 6px 25px rgba(0,0,0,0.1);max-height:400px;overflow-y:auto}
+.lbRow{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #e5e5ea;font-size:17px;font-weight:600}
+.lbRow:last-child{border-bottom:none}
+.lbRank{color:#007aff;width:40px}
+.lbWins{color:#6e6e73}
+#gameOverScreen{background:rgba(245,245,247,0.97);z-index:300}
+#winnerText{font-size:40px;font-weight:800;margin-bottom:10px;color:#1d1d1f}
+#winnerText.X{color:#007aff}
+#winnerText.O{color:#ff3b30}
+#winnerText.T{color:#6e6e73}
+#finalScore{font-size:22px;font-weight:700;margin-bottom:20px;color:#6e6e73}
+canvas{display:block;margin:6px auto;border-radius:20px;box-shadow:0 6px 30px rgba(0,0,0,0.12);background:#ffffff}
+#turnWrap{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;margin:4px auto;border-radius:14px;font-size:21px;font-weight:700;box-shadow:0 4px 15px rgba(0,0,0,0.1);background:#ffffff}
+#turnWrap.X{color:#007aff;border:3px solid #007aff}
+#turnWrap.O{color:#ff3b30;border:3px solid #ff3b30}
+#turnPlayer{font-weight:800;font-size:26px}
+#timer{font-size:32px;font-weight:800;margin:8px;color:#1d1d1f}
+#timer.warning{color:#ff3b30;animation:pulse 0.5s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+#scoreWrap{display:flex;justify-content:center;gap:10px;margin:6px auto 10px;max-width:500px;padding:0 10px}
+.scoreBox{flex:1;padding:11px 0;border-radius:14px;font-size:19px;font-weight:700;box-shadow:0 4px 15px rgba(0,0,0,0.1);background:#ffffff}
+.scoreX{color:#007aff;border:3px solid #007aff}
+.scoreO{color:#ff3b30;border:3px solid #ff3b30}
+.backBtn{position:fixed;top:12px;left:12px;padding:8px 16px;font:700 14px 'Poppins';border:none;border-radius:10px;background:#ffffff;color:#1d1d1f;box-shadow:0 3px 12px rgba(0,0,0,0.1);z-index:50;cursor:pointer}
+#hintBtn{position:fixed;top:12px;right:12px;padding:8px 16px;font:700 14px 'Poppins';border:none;border-radius:10px;background:#ffcc00;color:#1d1d1f;box-shadow:0 3px 12px rgba(0,0,0,0.1);z-index:50;display:none;cursor:pointer}
+#hintBtn:disabled{opacity:0.4}
+#soundBtn{position:fixed;top:12px;right:90px;padding:8px 16px;font:700 14px 'Poppins';border:none;border-radius:10px;background:#ffffff;color:#1d1d1f;box-shadow:0 3px 12px rgba(0,0,0,0.1);z-index:50;cursor:pointer}
+.small-text{font-size:0.8rem;opacity:0.7;margin:5px 0 0 0;text-align:center}
+#loadingLB{text-align:center;color:#6e6e73;padding:20px}
+#mmStatus{font-size:18px;margin:20px;color:#6e6e73;font-weight:600}
+</style>
+</head>
+<body>
+
+<div id="menu" class="screen active">
+  <div id="menuTitle">Ultimate <span>TIC</span></div>
+  <div id="menuSub">WELCOME</div>
+  <button class="menuBtn online" id="bOnline">🌐 Online 1v1</button>
+  <button class="menuBtn" id="b1">Play 1v1 Local</button>
+  <button class="menuBtn ai" id="b2">vs AI</button>
+  <button class="menuBtn lb" id="b3">Global Leaderboard</button>
+</div>
+
+<div id="difficulty" class="screen">
+  <button class="backBtn" id="b4">Back</button>
+  <div id="diffTitle">Choose Difficulty</div>
+  <button class="diffBtn easy" data-d="easy">Easy</button>
+  <button class="diffBtn medium" data-d="medium">Medium</button>
+  <button class="diffBtn hard" data-d="hard">Hard</button>
+</div>
+
+<div id="matchmaking" class="screen">
+  <button class="backBtn" id="b9">Cancel</button>
+  <div id="diffTitle">Finding Opponent...</div>
+  <div style="font-size:60px;margin:20px 0;">⏳</div>
+  <div id="mmStatus">Connecting...</div>
+  <button class="menuBtn" id="bCancel" style="margin-top:30px;background:#ff3b30">Cancel Search</button>
+</div>
+
+<div id="leaderboard" class="screen">
+  <button class="backBtn" id="b5">Back</button>
+  <div id="lbTitle">Global Leaderboard</div>
+  <div id="lbList"><div id="loadingLB">Loading...</div></div>
+  <p class="small-text">Top 100 players worldwide</p>
+  <button class="menuBtn" id="setNameBtn" style="margin-top:15px;font-size:16px;">✏️ Change Name</button>
+</div>
+
+<div id="gameOverScreen" class="screen">
+  <div id="winnerText"></div>
+  <div id="finalScore"></div>
+  <button class="menuBtn ad" id="adBtn">🎁 Watch Ad for +3 Hints</button>
+  <button class="menuBtn" id="b6">Play Again</button>
+  <button class="menuBtn" id="b7">Back to Menu</button>
+</div>
+
+<div id="game" class="screen">
+  <button class="backBtn" id="b8">Menu</button>
+  <button id="soundBtn">🔊</button>
+  <button id="hintBtn">💡 Hint (0)</button>
+  <div id="turnWrap" class="X">Turn: <span id="turnPlayer">X</span></div>
+  <div id="timer">10</div>
+  <canvas id="g"></canvas>
+  <div id="scoreWrap">
+    <div class="scoreBox scoreX" id="scoreX">You: 0</div>
+    <div class="scoreBox scoreO" id="scoreO">AI: 0</div>
+  </div>
+</div>
+
+<script src="cordova.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+window.onerror = function(msg, url, line) {
+  alert('JS Error: ' + msg + ' Line: ' + line);
+};
+
+// ===== ADMOB =====
+let adLoaded = false;
+document.addEventListener('deviceready', () => {
+  loadAd();
+  admob.rewarded.on('reward', () => { showHintFromAd(); });
+  admob.rewarded.on('load', () => { adLoaded = true; });
+  admob.rewarded.on('dismiss', () => { loadAd(); });
+});
+
+function loadAd() {
+  adLoaded = false;
+  admob.rewarded.load({
+    id: { android: 'ca-app-pub-3940256099942544/5224354919' }
+  });
+}
+
+function showAd() {
+  if (adLoaded) {
+    admob.rewarded.show();
+  } else {
+    alert('Ad loading... wait 5 sec');
+    loadAd();
+  }
+}
+// ===== END ADMOB =====
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAKoV6UYRFzm1SQZmXNDYmXwJqSEoxK61g",
+  authDomain: "tic-tac-5ba24.firebaseapp.com",
+  databaseURL: "https://tic-tac-5ba24-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "tic-tac-5ba24",
+  storageBucket: "tic-tac-5ba24.firebasestorage.app",
+  messagingSenderId: "1011329397826",
+  appId: "1:1011329397826:web:338e679d7e7bc92a4b29db"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let c,ctx,cell,size,turn='X',score=[0,0],gameOver=false,boards,bigBoard,activeBoard,frame=0,timeLeft=10,timerInterval=null,particles=[],confetti=[],shakeTime=0,hintsLeft=0,hintCell=null,gameStarted=false,vsAI=false,aiDifficulty='medium',audioCtx,soundOn=true,playerUID=null;
+let isOnlineMode=false,roomId=null,playerRole=null,oppName='Opponent',matchListener=null;
+const theme={bg:'#ffffff',grid:'#d2d2d7',x:'#007aff',o:'#ff3b30'};
+const $=id=>document.getElementById(id);
+const showScreen=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active')};
+const vib=ms=>{if(navigator.vibrate)navigator.vibrate(ms)};
+
+function requestHint() {
+    if (hintsLeft > 0 &&!gameOver&&!isOnlineMode) {
+        showHint();
+        return;
+    }
+    if (gameOver||isOnlineMode) return;
+    showAd();
+}
+function showHintFromAd() {
+    hintsLeft += 3;
+    updateHintBtn();
+    saveData();
+    alert('You earned +3 Hints!');
+}
+
+function getPlayerUID(){
+  if(!playerUID){
+    playerUID=localStorage.getItem('utttUID');
+    if(!playerUID){
+      playerUID='p_'+Math.random().toString(36).substr(2,9);
+      localStorage.setItem('utttUID',playerUID);
+    }
+  }
+  return playerUID;
+}
+function getPlayerName(){return localStorage.getItem('utttName')||'Player'+Math.floor(Math.random()*9999)}
+function setPlayerName(){
+  let name=prompt("Enter your name:",getPlayerName());
+  if(name&&name.trim()){
+    let cleanName=name.trim().slice(0,12).replace(/[.$#[\]/]/g,'');
+    localStorage.setItem('utttName',cleanName);
+    db.ref('players/'+getPlayerUID()+'/name').set(cleanName);
+    renderLeaderboard();
+  }
+}
+function submitScore(){
+  let uid=getPlayerUID(),name=getPlayerName();
+  db.ref('players/'+uid).transaction(data=>{
+    if(!data)return {name,wins:1,lastUpdate:Date.now()};
+    data.wins=(data.wins||0)+1;data.name=name;data.lastUpdate=Date.now();
+    return data;
+  });
+}
+function renderLeaderboard(){
+  $('lbList').innerHTML='<div id="loadingLB">Loading...</div>';
+  db.ref('players').orderByChild('wins').limitToLast(100).once('value',snap=>{
+    let data=[];snap.forEach(child=>data.unshift({name:child.val().name,wins:child.val().wins,uid:child.key}));
+    let html='';let myUID=getPlayerUID();
+    if(data.length===0){
+      html='<div class="lbRow"><span style="width:100%;text-align:center;color:#6e6e73;">No scores yet. Be the first!</span></div>';
+    }else{
+      data.slice(0,50).forEach((p,i)=>{
+        let isYou=p.uid===myUID;
+        html+=`<div class="lbRow" ${isYou?'style="background:#e3f2fd"':''}>
+          <span class="lbRank">${i+1}.</span>
+          <span>${p.name}${isYou?' ✏️':''}</span>
+          <span class="lbWins">${p.wins} W</span>
+        </div>`;
+      });
+    }
+    $('lbList').innerHTML=html;
+  }).catch(e=>{$('lbList').innerHTML='<div class="lbRow"><span style="width:100%;text-align:center;color:#ff3b30;">Failed to load.</span></div>'});
+}
+
+function startMatchmaking(){
+  showScreen('matchmaking');
+  $('mmStatus').innerText='Searching for opponent...';
+  let uid=getPlayerUID(),name=getPlayerName();
+  if(roomId) db.ref(`rooms/${roomId}`).off();
+  let queueRef=db.ref('queue/'+uid);
+  queueRef.set({name:name,timestamp:Date.now()});
+  queueRef.onDisconnect().remove();
+  db.ref('queue').once('value',snap=>{
+    let players=[];
+    snap.forEach(child=>{
+      if(child.key!==uid) players.push({uid:child.key,...child.val()});
+    });
+    if(players.length>0){
+      let opp=players[0];
+      roomId=[uid,opp.uid].sort().join('_');
+      playerRole='X';oppName=opp.name;
+      db.ref('queue/'+uid).remove();
+      db.ref('queue/'+opp.uid).remove();
+      db.ref(`rooms/${roomId}`).set({
+        playerX:{uid:uid,name:name},
+        playerO:{uid:opp.uid,name:opp.name},
+        turn:'X',status:'playing',created:Date.now()
+      });
+      startOnlineGame();
+    }else{
+      $('mmStatus').innerText='Waiting for opponent...';
+      db.ref('rooms').orderByChild('playerO/uid').equalTo(uid).on('child_added',snap=>{
+        if(!roomId){
+          roomId=snap.key;
+          playerRole='O';
+          oppName=snap.val().playerX.name;
+          db.ref('queue/'+uid).remove();
+          startOnlineGame();
+        }
+      });
+    }
+  });
+}
+
+function startOnlineGame(){
+  isOnlineMode=true;vsAI=false;score=[0,0];
+  showScreen('game');
+  $('hintBtn').style.display='none';
+  $('adBtn').style.display='none';
+  $('scoreX').innerText=playerRole=='X'?`You: 0`:`${oppName}: 0`;
+  $('scoreO').innerText=playerRole=='O'?`You: 0`:`${oppName}: 0`;
+  initGame();
+  listenToRoom();
+}
+
+function listenToRoom(){
+  if(matchListener)db.ref(`rooms/${roomId}`).off('value',matchListener);
+  matchListener=db.ref(`rooms/${roomId}`).on('value',snap=>{
+    let data=snap.val();
+    if(!data||data.status=='ended'){
+      alert('Opponent left');
+      toMenu();
+      return;
+    }
+    if(data.lastMove&&data.lastMove.player!==playerRole){
+      makeMove(data.lastMove.b,data.lastMove.idx,data.lastMove.player,false);
+    }
+  });
+}
+
+function sendOnlineMove(b,idx){
+  db.ref(`rooms/${roomId}`).update({
+    lastMove:{b:b,idx:idx,player:playerRole},
+    turn:turn
+  });
+}
+
+function loadData(){
+  hintsLeft=parseInt(localStorage.getItem('utttHints')||'0');
+  soundOn=localStorage.getItem('utttSound')!=='false';
+  $('soundBtn').innerText=soundOn?'🔊':'🔇';
+  getPlayerUID();
+}
+function saveData(){localStorage.setItem('utttHints',hintsLeft)}
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
+function playSound(freq,dur,type='sine',vol=0.1){if(!audioCtx||!soundOn)return;try{let o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.frequency.value=freq;o.type=type;g.gain.value=vol;o.start();g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur)}catch(e){}}
+function toggleSound(){soundOn=!soundOn;$('soundBtn').innerText=soundOn?'🔊':'🔇';localStorage.setItem('utttSound',soundOn)}
+function showDiff(){showScreen('difficulty')}
+function hideDiff(){showScreen('menu')}
+function showLB(){renderLeaderboard();showScreen('leaderboard')}
+function hideLB(){showScreen('menu')}
+function toMenu(){
+  clearInterval(timerInterval);
+  if(matchListener)db.ref(`rooms/${roomId}`).off('value',matchListener);
+  if(isOnlineMode&&roomId)db.ref(`rooms/${roomId}/status`).set('ended');
+  showScreen('menu');gameOver=true;score=[0,0];isOnlineMode=false;roomId=null;
+  document.body.className='';
+}
+function playAgain(){
+  clearInterval(timerInterval);
+  if(isOnlineMode){startMatchmaking();return;}
+  showScreen('game');score=[0,0];updateHintBtn();initGame();
+}
+function startGame(ai=false,diff='medium'){
+  initAudio();vsAI=ai;isOnlineMode=false;aiDifficulty=diff;score=[0,0];showScreen('game');
+  $('hintBtn').style.display=vsAI?'block':'none';
+  $('adBtn').style.display=vsAI?'block':'none';
+  $('scoreX').innerText=vsAI?`You: ${score[0]}`:`Player X: ${score[0]}`;
+  $('scoreO').innerText=vsAI?`AI: ${score[1]}`:`Player O: ${score[1]}`;
+  gameStarted=true;initGame();
+}
+function updateHintBtn(){$('hintBtn').innerText=`💡 Hint (${hintsLeft})`;$('hintBtn').disabled=hintsLeft<=0||!vsAI||gameOver||isOnlineMode}
+function showHint(){if(hintsLeft<=0||!vsAI||gameOver||isOnlineMode)return;let moves=getValidMoves();if(moves.length==0)return;let bestMove=findBestMove(moves,4);if(bestMove){hintCell=bestMove;hintsLeft--;updateHintBtn();saveData();playSound(800,0.2,'sine');vib(20)}}
+
+function updateTurnDisplay(){
+  let el=$('turnPlayer'),wrap=$('turnWrap');
+  if(isOnlineMode){
+    el.innerText=turn==playerRole?'Your Turn':`${oppName}'s Turn`;
+  }else{
+    el.innerText=vsAI?(turn=='X'?'You':'AI'):turn;
+  }
+  wrap.className=turn;
+  document.body.className = turn=='X'? 'turnX' : 'turnO';
+}
+
+function updateScoreDisplay(){
+  if(isOnlineMode){
+    $('scoreX').innerText=playerRole=='X'?`You: ${score[0]}`:`${oppName}: ${score[0]}`;
+    $('scoreO').innerText=playerRole=='O'?`You: ${score[1]}`:`${oppName}: ${score[1]}`;
+  }else{
+    $('scoreX').innerText=vsAI?`You: ${score[0]}`:`Player X: ${score[0]}`;
+    $('scoreO').innerText=vsAI?`AI: ${score[1]}`:`Player O: ${score[1]}`;
+  }
+}
+function initGame(){
+  c=$("g");ctx=c.getContext("2d");
+  size=Math.min(window.innerWidth*0.9,window.innerHeight-280,500);
+  c.width=c.height=size;cell=size/9;
+  boards=Array(9).fill().map(()=>Array(9).fill(''));
+  bigBoard=Array(9).fill('');activeBoard=-1;turn='X';gameOver=false;hintCell=null;
+  updateTurnDisplay();updateScoreDisplay();updateHintBtn();startTimer();draw();
+  if(vsAI&&turn=='O')setTimeout(aiMove,500);
+
+  // FIXED: Canvas click listener moved here so c exists
+  c.onclick = function(e){
+    if(gameOver||(vsAI&&turn=='O')||(isOnlineMode&&turn!=playerRole))return;
+    let r=c.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    let bx=Math.floor(x/(cell*3)),by=Math.floor(y/(cell*3)),b=by*3+bx;
+    if(!isBoardPlayable(b)||(activeBoard!=-1&&activeBoard!=b))return;
+    let sx=x-bx*3*cell,sy=y-by*3*cell,cx=Math.floor(sx/cell),cy=Math.floor(sy/cell),idx=cy*3+cx;
+    makeMove(b,idx,turn);
+  };
+}
+function startTimer(){
+  clearInterval(timerInterval);timeLeft=isOnlineMode?20:10;updateTimerDisplay();
+  timerInterval=setInterval(()=>{
+    if(gameOver){clearInterval(timerInterval);return}
+    timeLeft--;updateTimerDisplay();
+    if(timeLeft<=0){
+      playSound(200,0.3,'sawtooth');vib(200);
+      if(isOnlineMode&&turn==playerRole){endGame(playerRole=='X'?'O':'X');return}
+      turn=turn=='X'?'O':'X';timeLeft=isOnlineMode?20:10;updateTurnDisplay();
+      if(vsAI&&turn=='O')setTimeout(aiMove,300);
+    }
+  },1000);
+}
+function updateTimerDisplay(){
+  let t=$('timer');t.innerText=timeLeft;
+  if(timeLeft<=3)t.classList.add('warning');else t.classList.remove('warning');
+}
+
+function draw(){
+  if(!gameStarted||!c)return;
+  if(shakeTime>0){shakeTime--;c.style.transform=`translate(${(Math.random()-0.5)*12}px, ${(Math.random()-0.5)*12}px)`}else c.style.transform='';
+  ctx.fillStyle=theme.bg;ctx.fillRect(0,0,size,size);
+  ctx.strokeStyle=theme.grid;ctx.lineWidth=5;
+  for(let i=1;i<3;i++){
+    ctx.beginPath();ctx.moveTo(i*3*cell,12);ctx.lineTo(i*3*cell,size-12);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(12,i*3*cell);ctx.lineTo(size-12,i*3*cell);ctx.stroke();
+  }
+  for(let b=0;b<9;b++){
+    let bx=b%3*3*cell,by=Math.floor(b/3)*3*cell;
+    if(!gameOver&&isBoardPlayable(b)&&(activeBoard==-1||activeBoard==b)){
+      ctx.fillStyle=`rgba(0,122,255,0.25)`;
+      ctx.fillRect(bx+4,by+4,3*cell-8,3*cell-8);
+    }
+    if(bigBoard[b] && bigBoard[b]!='T'){
+      ctx.fillStyle=bigBoard[b]=='X'?'rgba(0,122,255,0.2)':'rgba(255,59,48,0.2)';
+      ctx.fillRect(bx+4,by+4,3*cell-8,3*cell-8);
+      ctx.font=`700 ${cell*2.2}px Poppins`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle=bigBoard[b]=='X'?theme.x:theme.o;
+      ctx.globalAlpha=0.8;
+      ctx.fillText(bigBoard[b],bx+1.5*cell,by+1.5*cell);
+      ctx.globalAlpha=1;
+    }
+    if(!bigBoard[b] || bigBoard[b]=='T'){
+      ctx.strokeStyle=theme.grid;ctx.lineWidth=1.5;
+      for(let i=1;i<3;i++){
+        ctx.beginPath();ctx.moveTo(bx+i*cell,by+8);ctx.lineTo(bx+i*cell,by+3*cell-8);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(bx+8,by+i*cell);ctx.lineTo(bx+3*cell-8,by+i*cell);ctx.stroke();
+      }
+      for(let i=0;i<9;i++){
+        if(!boards[b][i])continue;
+        let px=bx+(i%3+0.5)*cell,py=by+(Math.floor(i/3)+0.5)*cell;
+        ctx.font=`700 ${cell*0.55}px Poppins`;ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillStyle=boards[b][i]=='X'?theme.x:theme.o;
+        ctx.fillText(boards[b][i],px,py);
+      }
+    }
+    if(hintCell&&hintCell.b==b){
+      let cx=bx+(hintCell.c%3+0.5)*cell,cy=by+(Math.floor(hintCell.c/3)+0.5)*cell;
+      ctx.fillStyle=`rgba(255,204,0,${0.3+Math.sin(frame*0.1)*0.2})`;
+      ctx.beginPath();ctx.arc(cx,cy,cell*0.35,0,6.28);ctx.fill();
+    }
+  }
+  frame++;
+  if(!gameOver)requestAnimationFrame(draw);
+}
+
+function isBoardPlayable(b){return!bigBoard[b]&&boards[b].includes('')}
+function checkWin(b){const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];for(let l of lines){if(b[l[0]]&&b[l[0]]==b[l[1]]&&b[l[0]]==b[l[2]])return b[l[0]]}return null}
+
+function makeMove(b,idx,player,addEffect=true){
+  if(gameOver||boards[b][idx]||!isBoardPlayable(b)||(activeBoard!=-1&&activeBoard!=b))return false;
+  if(isOnlineMode&&player!=playerRole)return false;
+  boards[b][idx]=player;
+  if(addEffect){playSound(player=='X'?600:400,0.1,'square');vib(30);}
+  let winner=checkWin(boards[b]);
+  if(winner){bigBoard[b]=winner;if(addEffect){playSound(900,0.3,'triangle');shakeTime=15;}}
+  else if(!boards[b].includes('')){bigBoard[b]='T';}
+  let overallWinner=checkWin(bigBoard);
+  if(overallWinner){endGame(overallWinner);return true;}
+  else if(!bigBoard.includes('')||bigBoard.every(b=>b!=='')){endGame('T');return true;}
+  activeBoard=isBoardPlayable(idx)?idx:-1;
+  turn=turn=='X'?'O':'X';
+  updateTurnDisplay();
+  timeLeft=isOnlineMode?20:10;
+  if(isOnlineMode&&player==playerRole){sendOnlineMove(b,idx);}
+  if(vsAI&&turn=='O'&&!gameOver)setTimeout(aiMove,300);
+  return true;
+}
+
+function getValidMoves(){
+  let moves=[];
+  for(let b=0;b<9;b++){
+    if(!isBoardPlayable(b)||(activeBoard!=-1&&activeBoard!=b))continue;
+    for(let i=0;i<9;i++){if(!boards[b][i])moves.push({b:b,c:i});}
+  }
+  return moves;
+}
+
+function findBestMove(moves,depth){
+  let bestScore=-Infinity,bestMove=null;
+  for(let m of moves){
+    boards[m.b][m.c]='O';
+    let tempBig=checkWin(boards[m.b]);
+    let oldBig=bigBoard[m.b];
+    if(tempBig)bigBoard[m.b]=tempBig;
+    let score=minimax(depth-1,false,-Infinity,Infinity);
+    boards[m.b][m.c]='';
+    bigBoard[m.b]=oldBig;
+    if(score>bestScore){bestScore=score;bestMove=m;}
+  }
+  return bestMove;
+}
+
+function minimax(depth,isMax,alpha,beta){
+  let overallWinner=checkWin(bigBoard);
+  if(overallWinner=='O')return 1000+depth;
+  if(overallWinner=='X')return -1000-depth;
+  if(!bigBoard.includes('')||depth==0)return 0;
+  let moves=getValidMoves();
+  if(isMax){
+    let maxEval=-Infinity;
+    for(let m of moves){
+      boards[m.b][m.c]='O';
+      let tempBig=checkWin(boards[m.b]);
+      let oldBig=bigBoard[m.b];
+      if(tempBig)bigBoard[m.b]=tempBig;
+      let eval=minimax(depth-1,false,alpha,beta);
+      boards[m.b][m.c]='';bigBoard[m.b]=oldBig;
+      maxEval=Math.max(maxEval,eval);
+      alpha=Math.max(alpha,eval);
+      if(beta<=alpha)break;
+    }
+    return maxEval;
+  }else{
+    let minEval=Infinity;
+    for(let m of moves){
+      boards[m.b][m.c]='X';
+      let tempBig=checkWin(boards[m.b]);
+      let oldBig=bigBoard[m.b];
+      if(tempBig)bigBoard[m.b]=tempBig;
+      let eval=minimax(depth-1,true,alpha,beta);
+      boards[m.b][m.c]='';bigBoard[m.b]=oldBig;
+      minEval=Math.min(minEval,eval);
+      beta=Math.min(beta,eval);
+      if(beta<=alpha)break;
+    }
+    return minEval;
+  }
+}
+
+function aiMove(){
+  if(gameOver||turn!='O')return;
+  let moves=getValidMoves();
+  if(moves.length==0)return;
+  let bestMove;
+  if(aiDifficulty=='easy'){
+    bestMove=moves[Math.floor(Math.random()*moves.length)];
+  }else if(aiDifficulty=='medium'){
+    bestMove=Math.random()<0.7?findBestMove(moves,3):moves[Math.floor(Math.random()*moves.length)];
+  }else{
+    bestMove=findBestMove(moves,5);
+  }
+  if(bestMove)makeMove(bestMove.b,bestMove.c,'O');
+}
+
+function endGame(winner){
+  clearInterval(timerInterval);gameOver=true;shakeTime=0;
+  let wt=$('winnerText'),fs=$('finalScore');
+  if(winner=='T'){
+    wt.innerText='DRAW!';wt.className='T';
+    fs.innerText=`Final: ${score[0]} - ${score[1]}`;
+    playSound(400,0.5,'sine');
+  }else{
+    let youWin=(isOnlineMode&&winner==playerRole)||(!isOnlineMode&&winner=='X');
+    if(youWin){
+      score[winner=='X'?0:1]++;
+      if(!isOnlineMode)submitScore();
+    }
+    wt.innerText=youWin?'YOU WIN!':'YOU LOSE!';
+    wt.className=winner;
+    fs.innerText=`Final: ${score[0]} - ${score[1]}`;
+    playSound(youWin?800:200,youWin?0.4:0.6,youWin?'triangle':'sawtooth');
+    vib(youWin?[100,50,100]:[300]);
+  }
+  updateScoreDisplay();
+  setTimeout(()=>showScreen('gameOverScreen'),800);
+}
+
+// FIXED: Removed old c.addEventListener from here. It's now inside initGame()
+
+$('bOnline').onclick=startMatchmaking;
+$('b1').onclick=()=>startGame(false);
+$('b2').onclick=showDiff;
+$('b3').onclick=showLB;
+$('b4').onclick=hideDiff;
+$('b5').onclick=hideLB;
+$('b6').onclick=playAgain;
+$('b7').onclick=toMenu;
+$('b8').onclick=toMenu;
+$('b9').onclick=toMenu;
+$('bCancel').onclick=toMenu;
+$('adBtn').onclick=requestHint;
+$('hintBtn').onclick=requestHint;
+$('soundBtn').onclick=toggleSound;
+$('setNameBtn').onclick=setPlayerName;
+document.querySelectorAll('.diffBtn').forEach(b=>b.onclick=()=>startGame(true,b.dataset.d));
+
+loadData();
+updateHintBtn();
+</script>
+</body>
+</html>
